@@ -44,9 +44,21 @@ class ApiController extends Controller
 
         User::where('email', $request->email)->increment('balance', $request->amount) ?? null;
 
-        Deposit::where('trx', $request->order_id)->update(['status'=> 1]);
-
         $amount = number_format($request->amount, 2);
+
+        $get_depo = Deposit::where('trx', $request->order_id)->first() ?? null;
+        if ($get_depo == null){
+            $trx = new Deposit();
+            $trx->trx = $request->order_id;
+            $trx->status = 1;
+            $trx->user_id = $get_user->id;
+            $trx->amount = $request->amount;
+            $trx->method_code = 250;
+            $trx->save();
+        }else{
+            Deposit::where('trx', $request->order_id)->update(['status'=> 1]);
+        }
+
 
         return response()->json([
             'status' => true,
@@ -54,4 +66,27 @@ class ApiController extends Controller
         ]);
 
     }
+
+
+    public function verify_username(request $request)
+    {
+
+        $get_user =  User::where('email', $request->email)->first() ?? null;
+
+        if($get_user == null){
+
+            return response()->json([
+                'username' => "Not Found, Pleas try again"
+            ]);
+
+        }
+
+        return response()->json([
+            'username' => $get_user->username
+        ]);
+
+
+
+    }
+
 }
